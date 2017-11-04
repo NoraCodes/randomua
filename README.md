@@ -1,4 +1,6 @@
-# RandomUA
+![RandomUA Logo](addon/icons/randomua-96.png)
+RandomUA
+========
 
 Install for [Firefox](https://addons.mozilla.org/en-US/firefox/addon/randomua/) or [Chrome](https://chrome.google.com/webstore/detail/randomua/hjnnbhmaakbibdndnmjbkppmfjoejadg)
 
