@@ -24,7 +24,18 @@
         "<all_urls>"
     ],
 
+    "options_ui": {
+        "page": "pages/prefs.html",
+        "browser_style": true
+    },
+
     "background": {
             "scripts": ["background/random-ua.js"]
-    }
+    },
+
+    "applications": {
+        "gecko": {
+          "id": "randomua@leotindall.com"
+        }
+      }
 }
