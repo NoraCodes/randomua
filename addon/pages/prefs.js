@@ -1,8 +1,11 @@
-// Save the contents of the text box based on the #exclusions text entry box
+// Save the contents of the preferences form
 function saveOptions(e) {
     browser.storage.sync.set({
         exclusions: document.querySelector("#exclusions").value
     });
+    browser.storage.local.set({
+        useMobile: document.querySelector('#use-mobile').checked
+    })
     e.preventDefault();
 
     // Show the newly selected options
@@ -16,6 +19,11 @@ function restoreOptions() {
         document.querySelector("#exclusions-text").innerHTML = res.exclusions || 'no exclusions configured';
         document.querySelector("#exclusions").value = res.exclusions || '';
     });
+
+    var gettingLocalItem = browser.storage.local.get('useMobile');
+    gettingLocalItem.then((res) => {
+        document.querySelector('#use-mobile').checked = res.useMobile;
+    })
 }
 
 document.addEventListener('DOMContentLoaded', restoreOptions);

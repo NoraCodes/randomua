@@ -48,27 +48,38 @@ browser.webRequest.onBeforeSendHeaders.addListener(function (request) {
         }
     });
 
-    // If possible, apply the header modification
-    if (!excluded) {
-        // Find the header called "User-Agent" or "user-agent" or "UsEr-AgEnT" or whatever, and modify it
-        for (let header of request.requestHeaders) {
-            if (header.name.toLowerCase() === "user-agent") {
-                // Compute a random OS string.
-                let os = get_os();
-                // Compute a random Firefox version, from 50 to 950.
-                let fv = "" + (Math.floor(Math.random() * 900) + 50) + ".0";
-                // Choose from the list of browsers.
-                let br = choose(browsers);
-                // Choose additional clause, if any
-                let kh = choose(khtml);
-                // Generate a possible second browser clause
-                let bc = " " + choose(browsers) + "/" + Math.floor(Math.random() * 1000) + ".0";
-                bc = choose([bc, ""]);
-                header.value = "Mozilla/5.0 (" + os + "; rv:" + fv + ")" + kh + bc + " " + br + "/" + fv + ";"
-                console.log("[RANDOMUA] Fake User-Agent set: ", header.value);
+    // Check if we need to use a mobile UA
+    var gettingLocalItem = browser.storage.local.get('useMobile');
+    gettingLocalItem.then((res) => {
+        let useMobile = res.useMobile;
+
+        // If possible, apply the header modification
+        if (!excluded) {
+            // Find the header called "User-Agent" or "user-agent" or "UsEr-AgEnT" or whatever, and modify it
+            for (let header of request.requestHeaders) {
+                if (header.name.toLowerCase() === "user-agent") {
+                    // Possible mobile inclusion
+                    let mo = "";
+                    if (useMobile) {
+                        mo = " Mobile ";
+                    }
+                    // Compute a random OS string.
+                    let os = get_os();
+                    // Compute a random Firefox version, from 50 to 950.
+                    let fv = "" + (Math.floor(Math.random() * 900) + 50) + ".0";
+                    // Choose from the list of browsers.
+                    let br = choose(browsers);
+                    // Choose additional clause, if any
+                    let kh = choose(khtml);
+                    // Generate a possible second browser clause
+                    let bc = " " + choose(browsers) + "/" + Math.floor(Math.random() * 1000) + ".0";
+                    bc = choose([bc, ""]);
+                    header.value = "Mozilla/5.0 (" + os + "; rv:" + fv + ")" + kh + bc + mo + " " + br + "/" + fv + ";"
+                    console.log("[RANDOMUA] Fake User-Agent set: ", header.value);
+                }
             }
         }
-    }
+    });
     return { requestHeaders: request.requestHeaders };
 
 }, { urls: ['<all_urls>'] }, ['blocking', 'requestHeaders']);
