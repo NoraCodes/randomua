@@ -11,6 +11,11 @@
 
     "description": "Switches the user agent of the browser randomly for each new tab.",
 
+    "icons": {
+        "48": "icons/randomua-48.png",
+        "96": "icons/randomua-96.png"
+    },
+
     "permissions": [
         "storage",
         "webRequest",
