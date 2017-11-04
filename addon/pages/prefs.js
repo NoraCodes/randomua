@@ -16,7 +16,7 @@ function saveOptions(e) {
 function restoreOptions() {
     var gettingItem = browser.storage.sync.get('exclusions');
     gettingItem.then((res) => {
-        document.querySelector("#exclusions-text").innerHTML = res.exclusions || 'no exclusions configured';
+        document.querySelector("#exclusions-text").innerText = res.exclusions || 'no exclusions configured';
         document.querySelector("#exclusions").value = res.exclusions || '';
     });
 
