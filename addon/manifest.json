@@ -1,0 +1,24 @@
+{
+    "manifest_version": 2,
+    "name": "RandomUA",
+    "author": "Leo Tindall",
+    "version": "0.1",
+
+    "developer": {
+        "name": "Leo Tindall",
+        "url": "https://leotindall.com/random-ua.html"
+    },
+
+    "description": "Switches the user agent of the browser randomly for each new tab.",
+
+    "permissions": [
+        "storage",
+        "webRequest",
+        "webRequestBlocking",
+        "<all_urls>"
+    ],
+
+    "background": {
+            "scripts": ["background/random-ua.js"]
+    }
+}
