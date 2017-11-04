@@ -40,8 +40,8 @@ browser.webRequest.onBeforeSendHeaders.addListener(function (request) {
         if (header.name.toLowerCase() === "user-agent") {
             // Compute a random OS string.
             let os = get_os();
-            // Compute a random Firefox version, from 0 to 100.
-            let fv = "" + Math.floor(Math.random() * 1000) + ".0";
+            // Compute a random Firefox version, from 50 to 950.
+            let fv = "" + (Math.floor(Math.random() * 900) + 50) + ".0";
             // Choose from the list of browsers.
             let br = choose(browsers);
             // Choose additional clause, if any
