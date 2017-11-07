@@ -1,16 +1,31 @@
+// Chooses one of an array of choices, entirely at random.
 function choose(choices) {
     var index = Math.floor(Math.random() * choices.length);
     return choices[index];
 }
 
+// A list of available operating system/architecture names.
 let operating_systems = [
     "Windows NT",
+    "Windows NT",
     "X11; Linux x86_64",
-    "Linux i686",
-    "Linux i686 on x86_64",
+    "X11; Linux i686",
+    "X11; Linux i686 on x86_64",
+    "X11; U; Linux x86_64",
+    "X11; U; Linux i686",
+    "X11; U; Linux i686 on x86_64",
+    "X11; FreeBSD amd64",
+    "X11; FreeBSD i386",
+    "X11; FreeBSD i386 on amd64",
+    "X11; U; FreeBSD amd64",
+    "X11; U; FreeBSD i386",
+    "X11; U; FreeBSD i386 on amd64",
     "Intel Mac OS X",
+    "Intel Mac OS X",
+    "PPC Mac OS X",
     "PPC Mac OS X"
 ];
+
 // Get an operating system name and version.
 function get_os() {
     let x = Math.floor(Math.random() * 10);
@@ -40,8 +55,13 @@ browser.webRequest.onBeforeSendHeaders.addListener(function (request) {
     let excluded = false;
     var gettingItem = browser.storage.sync.get('exclusions');
     gettingItem.then((res) => {
-        for (const exclude of res.exclusions) {
-            if (request.url.includes(exclude) && exclude !== "") {
+        // If there are no exclusions, nothing is excluded.
+        if (res.exclusions === undefined) {
+            return;
+        }
+        // If there are exclusions, loop over them, checking if the URL matches.
+        for (const exclude of res.exclusions.split(";")) {
+            if (request.url.includes(exclude.trim()) && exclude.trim() !== "") {
                 excluded = true;
                 console.log("[RANDOMUA] excluding url " + request.url + " based on exclude " + exclude);
             }
@@ -50,7 +70,7 @@ browser.webRequest.onBeforeSendHeaders.addListener(function (request) {
 
     // Check if we need to use a mobile UA
     var gettingLocalItem = browser.storage.local.get('useMobile');
-    gettingLocalItem.then((res) => {
+    return gettingLocalItem.then((res) => {
         let useMobile = res.useMobile;
 
         // If possible, apply the header modification
@@ -65,8 +85,8 @@ browser.webRequest.onBeforeSendHeaders.addListener(function (request) {
                     }
                     // Compute a random OS string.
                     let os = get_os();
-                    // Compute a random Firefox version, from 50 to 950.
-                    let fv = "" + (Math.floor(Math.random() * 900) + 50) + ".0";
+                    // Compute a random browser version, from 1.0 to 250.100
+                    let fv = "" + (Math.floor(Math.random() * 249) + 1) + "." + Math.floor(Math.random() * 100);
                     // Choose from the list of browsers.
                     let br = choose(browsers);
                     // Choose additional clause, if any
@@ -79,7 +99,8 @@ browser.webRequest.onBeforeSendHeaders.addListener(function (request) {
                 }
             }
         }
+
+        return { requestHeaders: request.requestHeaders };
     });
-    return { requestHeaders: request.requestHeaders };
 
 }, { urls: ['<all_urls>'] }, ['blocking', 'requestHeaders']);
