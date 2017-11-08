@@ -4,6 +4,16 @@ function choose(choices) {
     return choices[index];
 }
 
+// Generates a random number between the two given values.
+function randomIntBetween(min, max) {
+    return Math.floor(max - Math.random() * (max - min));
+}
+
+// Generates a random version number, major version between the two given values;
+function randomVersion(min, max) {
+    return randomIntBetween(min, max) + "." + randomIntBetween(0, 100);
+}
+
 // A list of available operating system/architecture names.
 let operating_systems = [
     "Windows NT",
@@ -45,62 +55,88 @@ let browsers = ["Firefox", "Chrome", "Safari", "Trident", "OPR", "AppleWebKit"];
 let khtml = [" (KHTML, like Gecko) ", " Gecko/20100101 "];
 
 
-browser.webRequest.onBeforeSendHeaders.addListener(function (request) {
-    // Abort if the request is nonexistant or doesn't use headers.
-    if (!request || !request.requestHeaders) {
-        return {};
-    }
-
-    // Only apply the header modification if not excluded
-    let excluded = false;
-    var gettingItem = browser.storage.sync.get('exclusions');
-    gettingItem.then((res) => {
-        // If there are no exclusions, nothing is excluded.
-        if (res.exclusions === undefined) {
-            return;
-        }
-        // If there are exclusions, loop over them, checking if the URL matches.
-        for (const exclude of res.exclusions.split(";")) {
-            if (request.url.includes(exclude.trim()) && exclude.trim() !== "") {
-                excluded = true;
-                console.log("[RANDOMUA] excluding url " + request.url + " based on exclude " + exclude);
-            }
-        }
+function storageListener() {
+    // Load local preferences
+    let localPrefs;
+    var gettingLocalItem = browser.storage.local.get();
+    var localPrefsFuture = gettingLocalItem.then((res) => {
+        localPrefs = res;
     });
 
-    // Check if we need to use a mobile UA
-    var gettingLocalItem = browser.storage.local.get('useMobile');
-    return gettingLocalItem.then((res) => {
-        let useMobile = res.useMobile;
+    // Load sync preferences
+    let syncPrefs;
+    var gettingSyncItem = browser.storage.sync.get();
+    var syncPrefsFuture = gettingSyncItem.then((res) => {
+        syncPrefs = res;
+    });
 
-        // If possible, apply the header modification
-        if (!excluded) {
-            // Find the header called "User-Agent" or "user-agent" or "UsEr-AgEnT" or whatever, and modify it
-            for (let header of request.requestHeaders) {
-                if (header.name.toLowerCase() === "user-agent") {
-                    // Possible mobile inclusion
-                    let mo = "";
-                    if (useMobile) {
-                        mo = " Mobile ";
+    // Preferences loaded promise combines the two other promises.
+    let prefsLoadedPromise = Promise.all([localPrefsFuture, syncPrefsFuture]);
+
+    let p = prefsLoadedPromise.then(() => {// The function to be executed prior to sending headers.
+        browser.webRequest.onBeforeSendHeaders.addListener(function (request) {
+            // Abort if the request is nonexistant or doesn't use headers.
+            if (!request || !request.requestHeaders) {
+                return {};
+            }
+
+            // If there are no exclusions, nothing is excluded.
+            if (syncPrefs.exclusions !== undefined) {
+                // If there are exclusions, loop over them, checking if the URL matches.
+                for (const exclude of syncPrefs.exclusions.split(";")) {
+                    if (request.url.includes(exclude.trim()) && exclude.trim() !== "") {
+                        // If the URL matches, abort.
+                        console.log("[RANDOMUA] excluding url " + request.url + " based on exclude " + exclude);
+                        return {};
                     }
-                    // Compute a random OS string.
-                    let os = get_os();
-                    // Compute a random browser version, from 1.0 to 250.100
-                    let fv = "" + (Math.floor(Math.random() * 249) + 1) + "." + Math.floor(Math.random() * 100);
-                    // Choose from the list of browsers.
-                    let br = choose(browsers);
-                    // Choose additional clause, if any
-                    let kh = choose(khtml);
-                    // Generate a possible second browser clause
-                    let bc = " " + choose(browsers) + "/" + Math.floor(Math.random() * 1000) + ".0";
-                    bc = choose([bc, ""]);
-                    header.value = "Mozilla/5.0 (" + os + "; rv:" + fv + ")" + kh + bc + mo + " " + br + "/" + fv + ";"
-                    console.log("[RANDOMUA] Fake User-Agent set: ", header.value);
                 }
             }
-        }
 
-        return { requestHeaders: request.requestHeaders };
+            // Find the header called "User-Agent" or "user-agent" or "UsEr-AgEnT" or whatever, and modify it
+            let correctHeader = "";
+            for (let header of request.requestHeaders) {
+                if (header.name.toLowerCase() === "user-agent") {
+                    correctHeader = header;
+                }
+            }
+
+            // Possible mobile inclusion
+            let mo = "";
+            if (localPrefs.useMobile) {
+                mo = " Mobile ";
+            }
+            // Compute a random OS string.
+            let os = get_os();
+
+            // Compute random browser version syncronization
+            let min = 0;
+            let max = 250;
+            if (syncPrefs.minVersion !== undefined) {
+                min = syncPrefs.minVersion;
+            }
+            if (syncPrefs.maxVersion !== undefined) {
+                max = syncPrefs.maxVersion;
+            }
+            // Main browser clause version
+            let fv = "" + randomVersion(min, max);
+            // Second browser clause
+            let bc = " " + choose(browsers) + "/" + randomVersion(min, max);
+
+            // Choose from the list of browsers.
+            let br = choose(browsers);
+            // Choose additional clause.
+            let kh = choose(khtml);
+            bc = choose([bc, ""]);
+            correctHeader.value = "Mozilla/5.0 (" + os + "; rv:" + fv + ")" + kh + bc + mo + " " + br + "/" + fv + ";"
+            console.log("[RANDOMUA] Fake User-Agent set: ", correctHeader.value);
+            return { requestHeaders: request.requestHeaders };
+        }, { urls: ['<all_urls>'] }, ['blocking', 'requestHeaders']);
+
+
     });
 
-}, { urls: ['<all_urls>'] }, ['blocking', 'requestHeaders']);
+}
+
+
+browser.storage.onChanged.addListener(storageListener);
+storageListener();
