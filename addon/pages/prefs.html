@@ -18,12 +18,23 @@
             <span id="exclusions-text"></span>
         </p>
         <p>
-            <label>Exclude sites (semicolon seperated)</label>
-            <input type="text" id="exclusions">
+            <label>Exclude sites (semicolon seperated)
+                <input type="text" id="exclusions">
+            </label>
         </p>
         <p>
-            <label>Use a mobile-alike User-Agent string (so you don't get served desktop sites)</label>
-            <input type="checkbox" id="use-mobile">
+            <label>Use a mobile-alike User-Agent string (so you don't get served desktop sites)
+                <input type="checkbox" id="use-mobile">
+            </label>
+        </p>
+        <p>
+            <label>Minimum spoofed version:
+                <input type="number" id="minVersion"> </label>
+        </p>
+        <p>
+            <label>Maximum spoofed version:
+                <input type="number" id="maxVersion">
+            </label>
         </p>
         <button type="submit">Save</button>
     </form>
